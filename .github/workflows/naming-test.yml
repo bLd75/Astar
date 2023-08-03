@@ -21,4 +21,4 @@ jobs:
         echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_ENV
 
     - name: Print version
-      run: echo $"${{ matrix.chain }}"_runtime_version
+      run: echo $${{ matrix.chain }}_runtime_version
