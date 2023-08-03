@@ -19,8 +19,7 @@ jobs:
         ls -R
         chain=${{ matrix.chain }}
         runtime_version=$(echo '${{ matrix.chain }}-01')
-        echo $runtime_version
-        echo "::set-output name=runtime_version::$runtime_version"
+        echo $runtime_version >> $GITHUB_ENV
 
-      #asset_name: ${{ steps.get-runtime-version.outputs.runtime_version }}.wasm
- 
+    - name: Print version
+      run: echo $runtime_version
