@@ -1,0 +1,26 @@
+name: Test naming
+on:
+  push:
+    tags:
+    - name+*
+  workflow_dispatch:
+env:
+  SUBWASM_VERSION: 0.16.1
+jobs:
+  upload-runtimes:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chain: ["astar", "shiden", "shibuya"]
+    steps:
+    - name: Get runtime version
+      id: get-runtime-version
+      run: |
+        ls -R
+        chain=${{ matrix.chain }}
+        runtime_version=$(echo 'astar-01')
+        echo $runtime_version
+        echo "::set-output name=runtime_version::$runtime_version"
+
+      #asset_name: ${{ steps.get-runtime-version.outputs.runtime_version }}.wasm
+ 
