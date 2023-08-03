@@ -18,8 +18,7 @@ jobs:
       run: |
         ls -R
         chain=${{ matrix.chain }}
-        runtime_version=$(echo '${{ matrix.chain }}-01')
-        $runtime_version >> $GITHUB_ENV
+        echo "runtime_version=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_ENV
 
     - name: Print version
       run: echo $runtime_version
