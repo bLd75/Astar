@@ -22,3 +22,11 @@ jobs:
 
     - name: Print version
       run: echo $${{ matrix.chain }}_runtime_version
+
+  tracing-runtimes:
+    runs-on: ubuntu-latest
+    strategy:
+    steps:
+    - name: Get Astar runtime version
+      id: get-astar-runtime-version
+      run: echo $astar_runtime_version
