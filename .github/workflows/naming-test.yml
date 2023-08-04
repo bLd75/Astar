@@ -6,9 +6,6 @@ on:
   workflow_dispatch:
 env:
   SUBWASM_VERSION: 0.16.1
-  astar_runtime_version: ''
-  shiden_runtime_version: ''
-  shibuya_runtime_version: ''
 
 jobs:
   upload-runtimes:
