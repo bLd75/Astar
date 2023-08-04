@@ -6,10 +6,6 @@ on:
   workflow_dispatch:
 env:
   SUBWASM_VERSION: 0.16.1
-  astar_runtime_version: ''
-  shiden_runtime_version: ''
-  shibuya_runtime_version: ''
-
 jobs:
   upload-runtimes:
     runs-on: ubuntu-latest
@@ -22,7 +18,7 @@ jobs:
       run: |
         ls -R
         chain=${{ matrix.chain }}
-        echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')"
+        echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_ENV
 
     - name: Print version
       run: echo $${{ matrix.chain }}_runtime_version
