@@ -16,3 +16,21 @@ jobs:
     steps:
     - name: Create dummy file
       run: touch ${{ matrix.chain }}-test-runtime.wasm
+
+    - name: Archive Artifacts for ${{ matrix.chain }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-test-runtime
+        path: ${{ matrix.chain }}-test-runtime.wasm
+
+  upload-runtimes:
+    needs: init-upload
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chain: ["astar", "shiden", "shibuya"]
+    steps:
+    - name: Download dummy runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-test-runtime
