@@ -49,3 +49,9 @@ jobs:
     - name: Print version
       run: |
         echo "${{ env.runtime }}.wasm"
+
+   - name: Upload ${{ matrix.chain }} dummy Wasm
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-test-runtime-with-version
+        path: bulu.wasm
