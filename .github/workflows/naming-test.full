@@ -88,6 +88,67 @@ jobs:
           ${{ matrix.chain }}-metadata.json
           ${{ matrix.chain }}-diff.txt
 
+  publish-release-draft:
+    needs: [native-linux, evm-tracing-native-linux, srtool]
+    runs-on: ubuntu-latest
+    outputs:
+      release_url: ${{ steps.create-release.outputs.html_url }}
+      upload_url: ${{ steps.create-release.outputs.upload_url }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Download astar runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: astar-runtime
+        path: runtime-artifacts
+
+    - name: Download shiden runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: shiden-runtime
+        path: runtime-artifacts
+
+    - name: Download shibuya runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: shibuya-runtime
+        path: runtime-artifacts
+
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v2
+      with:
+        node-version: 18.x
+
+    - name: Get the latest release
+      id: latest-release
+      uses: pozetroninc/github-action-get-latest-release@v0.5.0
+      with:
+        repository: AstarNetwork/Astar
+        excludes: "prerelease, draft"
+
+    - name: Generate Release Body
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: generate-release-body
+      run: |
+        cd .github/scripts
+        yarn
+        yarn -s run ts-node generate-release-body.ts generate --owner "${{ github.repository_owner }}" --repo "$(basename ${{ github.repository }})" --from "${{ steps.latest-release.outputs.release }}" --to "${{ github.ref_name }}" --srtool-report-folder '../../runtime-artifacts/' > ../../body.md
+
+    - name: Create Release Draft
+      id: create-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: ${{ github.ref_name }}
+        body_path: body.md
+        draft: true
+
   upload-runtimes:
     needs: publish-release-draft
     runs-on: ubuntu-latest
@@ -109,12 +170,45 @@ jobs:
         echo $runtime_version
         echo "${{ matrix.chain }}=$(echo $runtime_version)" >> $GITHUB_OUTPUT
 
-    - name: Get runtime version
-      id: get-runtime-version
-      run: |
-        ls -R
-        chain=${{ matrix.chain }}
-        echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
+    - name: Upload ${{ matrix.chain }} Wasm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.publish-release-draft.outputs.upload_url }}
+        asset_path: ${{ matrix.chain }}_runtime.compact.compressed.wasm
+        asset_name: {{ steps.get-runtime-version.outputs.${{ matrix.chain }} }}.wasm
+        asset_content_type: application/wasm
+
+    - name: Upload ${{ matrix.chain }} Metadata
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.publish-release-draft.outputs.upload_url }}
+        asset_path: ${{ matrix.chain }}-metadata.json
+        asset_name: ${{ matrix.chain }}-metadata.json
+        asset_content_type: application/json
+
+    - name: Upload ${{ matrix.chain }} Compressed Info
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.publish-release-draft.outputs.upload_url }}
+        asset_path: ${{ matrix.chain }}-compressed-info.json
+        asset_name: ${{ matrix.chain }}-compressed-info.json
+        asset_content_type: application/json
+
+    - name: Upload ${{ matrix.chain }} Srtool Digest
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.publish-release-draft.outputs.upload_url }}
+        asset_path: ${{ matrix.chain }}-srtool-digest.json
+        asset_name: ${{ matrix.chain }}-srtool-digest.json
+        asset_content_type: application/json
 
     - name: Print version
       run: echo ${{ steps.get-runtime-version.outputs.astar }}
