@@ -25,7 +25,7 @@ jobs:
         echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
 
     - name: Print version
-      run: echo $${{ matrix.chain }}_runtime_version
+      run: echo $${{ matrix.chain }}
 
     outputs:
       astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
