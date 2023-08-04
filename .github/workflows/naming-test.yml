@@ -22,17 +22,19 @@ jobs:
       run: |
         ls -R
         chain=${{ matrix.chain }}
-        echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')"
+        echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
 
     - name: Print version
       run: echo $${{ matrix.chain }}_runtime_version
 
-    - name: Print version 2
-      run: echo $astar_runtime_version
+    outputs:
+      astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
+      shiden_runtime_version: ${{ steps.get-runtime-version.outputs.shiden }}
+      shibuya_runtime_version: ${{ steps.get-runtime-version.outputs.shibuya }}
 
   tracing-runtimes:
     needs: upload-runtimes
     runs-on: ubuntu-latest
     steps:
     - name: Get Astar runtime version
-      run: echo $astar_runtime_version
+      run: echo ${{needs.upload-runtimes.outputs.astar_runtime_version}}
