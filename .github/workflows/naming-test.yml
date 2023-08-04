@@ -22,7 +22,7 @@ jobs:
       run: |
         ls -R
         chain=${{ matrix.chain }}
-        runtime_version=$(echo '"astar"-"4"' | tr -d '"')
+        runtime_version=$(echo '"${{ matrix.chain }}"-"4"' | tr -d '"')
         echo $runtime_version
         echo "runtime=$(echo $runtime_version)" >> $GITHUB_ENV
         echo "${{ matrix.chain }}=$(echo $runtime_version)" >> $GITHUB_OUTPUT
