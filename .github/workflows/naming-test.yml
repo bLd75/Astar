@@ -24,13 +24,13 @@ jobs:
         chain=${{ matrix.chain }}
         runtime_version=$(echo '"astar"-"4"' | tr -d '"')
         echo $runtime_version
+        echo "runtime=$(echo $runtime_version)" >> $GITHUB_ENV
         echo "${{ matrix.chain }}=$(echo $runtime_version)" >> $GITHUB_OUTPUT
       #echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
 
     - name: Print version
       run: |
-        var='${{ steps.get-runtime-version.outputs.'${{ matrix.chain }}'}}'
-        echo $var
+        echo $runtime
 
     outputs:
       astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
