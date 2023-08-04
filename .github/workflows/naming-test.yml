@@ -34,3 +34,24 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ matrix.chain }}-test-runtime
+
+    - name: Get runtime version
+      id: get-runtime-version
+      run: |
+        ls -R
+        chain=${{ matrix.chain }}
+        runtime_version=$(echo '"${{ matrix.chain }}"-"4"' | tr -d '"')
+        echo $runtime_version
+        echo "runtime=$(echo $runtime_version)" >> $GITHUB_ENV
+        echo "${{ matrix.chain }}=$(echo $runtime_version)" >> $GITHUB_OUTPUT
+      #echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
+
+    - name: Print version
+      run: |
+        echo "${{ env.runtime }}.wasm"
+
+   - name: Upload ${{ matrix.chain }} dummy Wasm
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-test-runtime-with-version
+        path: ${{ env.runtime }}.wasm
