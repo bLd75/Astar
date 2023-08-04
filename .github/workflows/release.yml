@@ -8,66 +8,6 @@ env:
   SUBWASM_VERSION: 0.16.1
 
 jobs:
-  native-linux:
-    runs-on: [self-hosted, Linux, X64]
-    strategy:
-      matrix:
-        target:
-        - x86_64-unknown-linux-gnu
-        - aarch64-unknown-linux-gnu
-
-    steps:
-    - name: Checkout the source code
-      uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Install deps
-      run: sudo apt -y install protobuf-compiler
-
-    - name: aarch64 setup
-      if: contains(matrix.target, 'aarch64')
-      shell: bash
-      run: |
-        sudo apt update
-        sudo apt install -y gcc-multilib g++-multilib
-        sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
-        mkdir -p .cargo
-        touch .cargo/config
-        printf '[target.aarch64-unknown-linux-gnu]\nlinker = "aarch64-linux-gnu-gcc"' >> .cargo/config
-
-    - name: x86_64 setup
-      if: contains(matrix.target, 'x86_64')
-      run: |
-        mkdir -p .cargo
-        touch .cargo/config
-        printf '[target.x86_64-unknown-linux-gnu]\nrustflags = ["-Clink-arg=-fuse-ld=lld"]' >> .cargo/config
-
-    - name: Install & display rust toolchain
-      run: rustup show
-
-    - name: Add aarch64 target
-      if: contains(matrix.target, 'aarch64')
-      run: rustup target add ${{ matrix.target }}
-
-    - name: Check targets are installed correctly
-      run: rustup target list --installed
-
-    - name: Build optimized binary
-      run: CARGO_PROFILE_RELEASE_LTO=true RUSTFLAGS="-C codegen-units=1" cargo build --release --target ${{ matrix.target }} --verbose --locked
-
-    - name: Set artifact name
-      env:
-        TARGET: ${{ matrix.target }}
-      id: artifact-name
-      run: echo "::set-output name=name::astar-ubuntu-latest-${TARGET%%-*}"
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: ${{ steps.artifact-name.outputs.name }}
-        path: target/${{ matrix.target }}/release/astar-collator
-
   evm-tracing-native-linux:
     runs-on: [self-hosted, Linux, X64]
     steps:
@@ -199,7 +139,7 @@ jobs:
           ${{ matrix.chain }}-diff.txt
 
   publish-release-draft:
-    needs: [native-linux, evm-tracing-native-linux, srtool]
+    needs: [evm-tracing-native-linux, srtool]
     runs-on: ubuntu-latest
     outputs:
       release_url: ${{ steps.create-release.outputs.html_url }}
