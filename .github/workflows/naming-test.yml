@@ -23,6 +23,9 @@ jobs:
     - name: Print version
       run: echo $${{ matrix.chain }}_runtime_version
 
+    - name: Print version 2
+      run: echo $astar_runtime_version
+
   tracing-runtimes:
     needs: upload-runtimes
     runs-on: ubuntu-latest
