@@ -1,4 +1,4 @@
-name: Test naming
+name: Light release
 on:
   push:
     tags:
