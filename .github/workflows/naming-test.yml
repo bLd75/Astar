@@ -53,5 +53,5 @@ jobs:
    - name: Upload ${{ matrix.chain }} dummy Wasm
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.chain }}-test-runtime-with-version
+        name: bulu-test-runtime-with-version
         path: bulu.wasm
