@@ -29,7 +29,7 @@ jobs:
 
     - name: Print version
       run: |
-        echo ${{ steps.get-runtime-version.outputs.${{ matrix.chain }} }}
+        echo "${{ steps.get-runtime-version.outputs.${{ matrix.chain }} }}"
 
     outputs:
       astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
