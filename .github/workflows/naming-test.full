@@ -1,0 +1,132 @@
+name: Test naming
+on:
+  push:
+    tags:
+    - name+*
+  workflow_dispatch:
+env:
+  SUBWASM_VERSION: 0.16.1
+  astar_runtime_version: ''
+  shiden_runtime_version: ''
+  shibuya_runtime_version: ''
+
+jobs:
+  srtool:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chain: ["astar", "shiden", "shibuya"]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Srtool build
+      id: srtool_build
+      uses: chevdor/srtool-actions@v0.7.0
+      with:
+        # TODO: Remove tag field once we uplifted to the latest polkadot 0.9.41.
+        tag: 1.66.1
+        chain: ${{ matrix.chain }}
+        runtime_dir: runtime/${{ matrix.chain }}
+
+    - name: Summary
+      run: |
+        echo '${{ steps.srtool_build.outputs.json }}' | jq > ${{ matrix.chain }}-srtool-digest.json
+        cat ${{ matrix.chain }}-srtool-digest.json
+        echo "Compact Runtime: ${{ steps.srtool_build.outputs.wasm }}"
+        echo "Compressed Runtime: ${{ steps.srtool_build.outputs.wasm_compressed }}"
+        cp ${{ steps.srtool_build.outputs.wasm }} ${{ matrix.chain }}_runtime.compact.wasm
+        cp ${{ steps.srtool_build.outputs.wasm_compressed }} ${{ matrix.chain }}_runtime.compact.compressed.wasm
+
+    # it takes a while to build the runtime, so let's save the artifact as soon as we have it
+    - name: Archive Artifacts for ${{ matrix.chain }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-runtime
+        path: |
+          ${{ matrix.chain }}_runtime.compact.wasm
+          ${{ matrix.chain }}_runtime.compact.compressed.wasm
+          ${{ matrix.chain }}-srtool-digest.json
+
+    # We now get extra information thanks to subwasm
+    - name: Install subwasm
+      run: |
+        wget https://github.com/chevdor/subwasm/releases/download/v${{ env.SUBWASM_VERSION }}/subwasm_linux_amd64_v${{ env.SUBWASM_VERSION }}.deb
+        sudo dpkg -i subwasm_linux_amd64_v${{ env.SUBWASM_VERSION }}.deb
+        subwasm --version
+
+    - name: Show Runtime information
+      shell: bash
+      run: |
+        subwasm info ${{ steps.srtool_build.outputs.wasm }}
+        subwasm info ${{ steps.srtool_build.outputs.wasm_compressed }}
+        subwasm --json info ${{ steps.srtool_build.outputs.wasm }} > ${{ matrix.chain }}-info.json
+        subwasm --json info ${{ steps.srtool_build.outputs.wasm_compressed }} > ${{ matrix.chain }}-compressed-info.json
+
+    - name: Extract the metadata
+      shell: bash
+      run: |
+        subwasm meta ${{ steps.srtool_build.outputs.wasm }}
+        subwasm --json meta ${{ steps.srtool_build.outputs.wasm }} > ${{ matrix.chain }}-metadata.json
+
+    - name: Check the metadata diff
+      shell: bash
+      # the following subwasm call will error for chains that are not known and/or live, that includes shell for instance
+      run: |
+        subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }} || \
+          echo "Subwasm call failed, check the logs. This is likely because ${{ matrix.chain }} is not known by subwasm" | \
+          tee ${{ matrix.chain }}-diff.txt
+
+    - name: Archive Subwasm results
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-runtime
+        path: |
+          ${{ matrix.chain }}-info.json
+          ${{ matrix.chain }}-compressed-info.json
+          ${{ matrix.chain }}-metadata.json
+          ${{ matrix.chain }}-diff.txt
+
+  upload-runtimes:
+    needs: publish-release-draft
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chain: ["astar", "shiden", "shibuya"]
+    steps:
+    - name: Download runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.chain }}-runtime
+
+    - name: Get runtime version
+      id: get-runtime-version
+      run: |
+        ls -R
+        chain=${{ matrix.chain }}
+        runtime_version=$(cat $chain-compressed-info.json | jq '.core_version' | tr -d '"' | cut -d ' ' -f 1)
+        echo $runtime_version
+        echo "${{ matrix.chain }}=$(echo $runtime_version)" >> $GITHUB_OUTPUT
+
+    - name: Get runtime version
+      id: get-runtime-version
+      run: |
+        ls -R
+        chain=${{ matrix.chain }}
+        echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
+
+    - name: Print version
+      run: echo ${{ steps.get-runtime-version.outputs.astar }}
+
+    outputs:
+      astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
+      shiden_runtime_version: ${{ steps.get-runtime-version.outputs.shiden }}
+      shibuya_runtime_version: ${{ steps.get-runtime-version.outputs.shibuya }}
+
+  tracing-runtimes:
+    needs: upload-runtimes
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get Astar runtime version
+      run: echo ${{needs.upload-runtimes.outputs.astar_runtime_version}}
