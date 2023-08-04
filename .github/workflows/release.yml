@@ -330,7 +330,7 @@ jobs:
       shibuya_runtime_version: ${{ steps.get-runtime-version.outputs.shibuya }}
 
   upload-evm-tracing-artifacts:
-    needs: upload-runtimes
+    needs: [publish-release-draft,upload-runtimes]
     runs-on: ubuntu-latest
     steps:
     - name: Download pre-built collator binary for evm tracing
