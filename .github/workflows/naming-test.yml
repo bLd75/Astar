@@ -30,7 +30,6 @@ jobs:
     - name: Print version
       run: |
         echo ${{ steps.get-runtime-version.outputs.astar }}
-        echo "${{ steps.get-runtime-version.outputs.$runtime_version }}"
 
     outputs:
       astar_runtime_version: ${{ steps.get-runtime-version.outputs.astar }}
