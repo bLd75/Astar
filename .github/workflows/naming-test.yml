@@ -11,7 +11,7 @@ env:
   shibuya_runtime_version: ''
 
 jobs:
-  create-artifacts:
+  init-upload:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,6 +27,7 @@ jobs:
         path: ${{ matrix.chain }}-test-runtime.wasm
 
   upload-runtimes:
+    needs: init-upload
     runs-on: ubuntu-latest
     strategy:
       matrix:
