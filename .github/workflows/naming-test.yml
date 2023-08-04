@@ -22,7 +22,7 @@ jobs:
       run: |
         ls -R
         chain=${{ matrix.chain }}
-        echo "${{ matrix.chain }}_runtime_version=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
+        echo "${{ matrix.chain }}=$(echo '${{ matrix.chain }}-01')" >> $GITHUB_OUTPUT
 
     - name: Print version
       run: echo $${{ matrix.chain }}_runtime_version
